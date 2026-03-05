@@ -1,4 +1,3 @@
-
 # rastreamento.py
 
 import os
@@ -111,30 +110,16 @@ def rodar_rastreamento_para_aba(nome_aba: str):
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = []
-
         for row in linhas:
-
             pedido = str(row[COL_PEDIDO - 1]).strip()
-            if not pedido:
-                continue
+            if pedido:
+                futures.append(
+                    executor.submit(processar_linha, pedido, row)
+                )
 
-            status = (row[COL_STATUS_LOG - 1] if len(row) >= COL_STATUS_LOG else "").strip().upper()
-            link = (row[COL_LINK - 1] if len(row) >= COL_LINK else "").strip()
-
-            # 🔒 IGNORA antes de criar tarefa
-            if status in {"ENTREGUE", "FALHA"}:
-                continue
-
-            if not link.startswith("http"):
-                continue
-
-            futures.append(
-                executor.submit(processar_linha, pedido, row)
-            )
-
-    for i, _ in enumerate(as_completed(futures), start=1):
-        if i % BATCH_SIZE == 0:
-            flush_updates()
+        for i, _ in enumerate(as_completed(futures), start=1):
+            if i % BATCH_SIZE == 0:
+                flush_updates()
 
     flush_updates()
 
