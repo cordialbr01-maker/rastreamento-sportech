@@ -1,3 +1,4 @@
+
 # rastreamento.py
 
 import os
@@ -119,26 +120,13 @@ def rodar_rastreamento_para_aba(nome_aba: str):
 
             status = (row[COL_STATUS_LOG - 1] if len(row) >= COL_STATUS_LOG else "").strip().upper()
             link = (row[COL_LINK - 1] if len(row) >= COL_LINK else "").strip()
-            ultima_leitura = (row[COL_ULTIMA_LEITURA - 1] if len(row) >= COL_ULTIMA_LEITURA else "").strip()
 
-            # 🔒 Ignora pedidos finalizados
+            # 🔒 IGNORA antes de criar tarefa
             if status in {"ENTREGUE", "FALHA"}:
                 continue
 
-            # 🔒 Ignora link inválido
             if not link.startswith("http"):
                 continue
-
-            # 🔒 Ignora se já foi lido hoje
-            if ultima_leitura:
-                try:
-                    ultima = datetime.fromisoformat(ultima_leitura)
-                    hoje = datetime.now(TZ).date()
-
-                    if ultima.date() == hoje:
-                        continue
-                except:
-                    pass
 
             futures.append(
                 executor.submit(processar_linha, pedido, row)
